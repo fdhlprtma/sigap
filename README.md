@@ -1,5 +1,8 @@
 # sigap
+# alamat API
+http://keluhankami.rf.gd/
 
+# petunjuk
 wilayah_disetujui.php = berfungsi untuk menangani langsung inputan untuk keluhan, jadi user tidak perlu lagi
                         menginput wilayah saat ingin memberikan keluhan/laporan
 
