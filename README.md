@@ -1,6 +1,7 @@
 # sigap
 # alamat API
 http://keluhankami.rf.gd/
+http://keluhankami.rf.gd/routes/user/keluhan/keluhan_list.php
 
 # petunjuk
 wilayah_disetujui.php = berfungsi untuk menangani langsung inputan untuk keluhan, jadi user tidak perlu lagi
