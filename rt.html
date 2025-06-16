@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Keluhan Wilayah RT</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f0f2f5;
+    }
+    h2 {
+      color: #333;
+    }
+    .keluhan-card {
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .keluhan-card img {
+      max-width: 100%;
+      max-height: 200px;
+      margin-top: 10px;
+    }
+    .status {
+      font-weight: bold;
+      color: #007BFF;
+    }
+    .status-form {
+      margin-top: 10px;
+    }
+    .status-form select, .status-form button {
+      padding: 5px 10px;
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Daftar Keluhan di Wilayah RT Anda</h2>
+  <div id="keluhan-list">Memuat data keluhan...</div>
+
+  <script>
+    async function fetchKeluhanRT() {
+      const container = document.getElementById("keluhan-list");
+      container.innerHTML = "Memuat data keluhan...";
+      try {
+        const res = await fetch("http://localhost/keluhan-masyarakat/routes/list_keluhan_status.php");
+        const data = await res.json();
+
+        if (!data.success) {
+          container.innerHTML = `<p style="color:red;">${data.message}</p>`;
+          return;
+        }
+
+        if (data.data.length === 0) {
+          container.innerHTML = "<p>Tidak ada keluhan di wilayah Anda.</p>";
+          return;
+        }
+
+        container.innerHTML = "";
+        data.data.forEach(keluhan => {
+          const div = document.createElement("div");
+          div.className = "keluhan-card";
+          div.innerHTML = `
+            <h3>${keluhan.judul}</h3>
+            <p>${keluhan.deskripsi}</p>
+            ${keluhan.gambar ? `<img src="../uploads/${keluhan.gambar}" alt="gambar keluhan">` : ""}
+            <p class="status">Status: <span id="status-${keluhan.id}">${keluhan.status}</span></p>
+            <p><small>Dibuat: ${keluhan.created_at}</small></p>
+            <div class="status-form">
+              <select id="select-${keluhan.id}">
+                <option value="terselesaikan" ${keluhan.status === "terselesaikan" ? "selected" : ""}>Terselesaikan</option>
+                <option value="belum terselesaikan" ${keluhan.status === "belum terselesaikan" ? "selected" : ""}>Belum Terselesaikan</option>
+              </select>
+              <button onclick="ubahStatus(${keluhan.id})">Ubah Status</button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = "<p style='color:red;'>Gagal memuat data keluhan.</p>";
+      }
+    }
+
+    async function ubahStatus(id) {
+      const select = document.getElementById(`select-${id}`);
+      const status = select.value;
+
+      try {
+        const res = await fetch("http://localhost/keluhan-masyarakat/routes/list_keluhan_status.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            keluhan_id: id,
+            status: status
+          })
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          document.getElementById(`status-${id}`).textContent = status;
+          alert("Status berhasil diperbarui.");
+        } else {
+          alert("Gagal memperbarui status: " + result.message);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan saat mengubah status.");
+      }
+    }
+
+    fetchKeluhanRT();
+  </script>
+
+</body>
+</html>

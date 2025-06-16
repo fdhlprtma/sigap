@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Leaderboard Laporan</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    select, button {
+      padding: 5px;
+      margin: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #eee;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🏆 Leaderboard Laporan Warga</h1>
+
+  <form id="filter-form">
+    <label>
+      Provinsi:
+      <input type="text" id="filter-provinsi">
+    </label>
+    <label>
+      Kecamatan:
+      <input type="text" id="filter-kecamatan">
+    </label>
+    <label>
+      Kelurahan:
+      <input type="text" id="filter-kelurahan">
+    </label>
+    <button type="submit">Filter</button>
+  </form>
+
+  <table id="leaderboard-table">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Nama</th>
+        <th>Jumlah Laporan</th>
+        <th>RT/RW</th>
+        <th>Kelurahan</th>
+        <th>Kecamatan</th>
+        <th>Kota</th>
+        <th>Provinsi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="8">Memuat...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    async function loadLeaderboard(provinsi = '', kecamatan = '', kelurahan = '') {
+      const params = new URLSearchParams();
+      if (provinsi) params.append("provinsi", provinsi);
+      if (kecamatan) params.append("kecamatan", kecamatan);
+      if (kelurahan) params.append("kelurahan", kelurahan);
+
+      const res = await fetch(`http://localhost/keluhan-masyarakat/routes/leaderboard.php?${params}`);
+      const data = await res.json();
+
+      const tbody = document.querySelector("#leaderboard-table tbody");
+      tbody.innerHTML = "";
+
+      if (data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='8'>Tidak ada data.</td></tr>";
+        return;
+      }
+
+      data.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${item.nama}</td>
+          <td>${item.jumlah_laporan}</td>
+          <td>${item.rt}/${item.rw}</td>
+          <td>${item.kelurahan}</td>
+          <td>${item.kecamatan}</td>
+          <td>${item.kota}</td>
+          <td>${item.provinsi}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById("filter-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const provinsi = document.getElementById("filter-provinsi").value.trim();
+      const kecamatan = document.getElementById("filter-kecamatan").value.trim();
+      const kelurahan = document.getElementById("filter-kelurahan").value.trim();
+      loadLeaderboard(provinsi, kecamatan, kelurahan);
+    });
+
+    // Load default leaderboard saat halaman dibuka
+    loadLeaderboard();
+  </script>
+
+</body>
+</html>

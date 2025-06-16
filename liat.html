@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Form Keluhan</title>
+  <style>
+    input[readonly] {
+      background-color: #f0f0f0;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Kirim Keluhan</h2>
+  <form id="keluhanForm" enctype="multipart/form-data">
+    <input type="text" id="judul" name="judul" placeholder="Judul keluhan" required><br><br>
+
+    <textarea id="deskripsi" name="deskripsi" placeholder="Deskripsi keluhan" required></textarea><br><br>
+
+    <input type="file" id="gambar" name="gambar" accept="image/*"><br><br>
+
+    <!-- Input wilayah otomatis -->
+    <input type="text" id="provinsi" name="provinsi" placeholder="Provinsi" readonly><br>
+    <input type="text" id="kota" name="kota" placeholder="Kabupaten" readonly><br>
+    <input type="text" id="kecamatan" name="kecamatan" placeholder="Kecamatan" readonly><br>
+    <input type="text" id="kelurahan" name="kelurahan" placeholder="Kelurahan" readonly><br>
+    <input type="text" id="rt" name="rt" placeholder="RT" readonly><br>
+    <input type="text" id="rw" name="rw" placeholder="RW" readonly><br><br>
+
+    <button type="submit">Kirim Keluhan</button>
+  </form>
+
+  <p id="statusMsg"></p>
+
+  <script>
+    // Ambil wilayah otomatis dari server
+    fetch('http://localhost/keluhan-masyarakat/routes/user/wilayah_disetujui.php')
+      .then(res => res.json())
+      .then(data => {
+        if (data.length > 0) {
+          const wilayah = data[0];
+          document.getElementById('provinsi').value = wilayah.provinsi;
+          document.getElementById('kota').value = wilayah.kabupaten;
+          document.getElementById('kecamatan').value = wilayah.kecamatan;
+          document.getElementById('kelurahan').value = wilayah.kelurahan;
+          document.getElementById('rt').value = wilayah.rt;
+          document.getElementById('rw').value = wilayah.rw;
+        } else {
+          document.getElementById('statusMsg').textContent = "Wilayah belum disetujui.";
+        }
+      });
+
+    // Kirim keluhan ke server
+    document.getElementById('keluhanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(document.getElementById('keluhanForm'));
+
+            const res = await fetch('http://localhost/keluhan-masyarakat/routes/user/keluhan/keluhan_tambah.php', {
+              method: 'POST',
+              body: formData
+            });
+
+              const text = await res.text();
+
+              try {
+                const data = JSON.parse(text);
+                document.getElementById('statusMsg').textContent = data.message || data.error || text;
+              } catch (err) {
+                document.getElementById('statusMsg').textContent = text;
+              }
+            });
+  </script>
+</body>
+
+</html>

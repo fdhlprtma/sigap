@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Konfirmasi Pengajuan RT</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    button {
+      padding: 5px 10px;
+      background-color: green;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: gray;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>Daftar Pengajuan RT</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Nama</th>
+        <th>Wilayah</th>
+        <th>Status</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="tabel-pengajuan-rt">
+      <tr><td colspan="4">Memuat data...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    async function loadPengajuanRT() {
+      const res = await fetch("http://localhost/keluhan-masyarakat/routes/pengajuan_rt_list.php");
+      const data = await res.json();
+
+      const tbody = document.getElementById("tabel-pengajuan-rt");
+      tbody.innerHTML = "";
+
+      if (data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='4'>Tidak ada pengajuan.</td></tr>";
+        return;
+      }
+
+      data.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.nama}</td>
+          <td>
+            RT ${item.rt}/RW ${item.rw}, Kel. ${item.kelurahan}, Kec. ${item.kecamatan}, 
+            ${item.kota}, ${item.provinsi}
+          </td>
+          <td>${item.status === 'pending' ? 'Menunggu konfirmasi' : 'Diterima'}</td>
+          <td>
+            ${item.status === 'pending' 
+              ? `<button onclick="konfirmasiRT(${item.id})">Konfirmasi</button>` 
+              : `<button disabled>Sudah dikonfirmasi</button>`
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function konfirmasiRT(id) {
+      if (!id) {
+        alert("ID tidak valid");
+        return;
+      }
+
+      const yakin = confirm("Yakin ingin mengkonfirmasi pengajuan ini?");
+      if (!yakin) return;
+
+      const res = await fetch("http://localhost/keluhan-masyarakat/routes/rt_konfirmasi.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `id=${id}`
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        alert("Pengajuan berhasil dikonfirmasi!");
+        loadPengajuanRT();
+      } else {
+        alert(data.message || "Gagal mengkonfirmasi.");
+      }
+    }
+
+    loadPengajuanRT();
+  </script>
+</body>
+</html>

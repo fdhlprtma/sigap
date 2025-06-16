@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Form Pengajuan RT</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    input, select {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Form Pengajuan Menjadi RT</h2>
+  <form id="form-rt">
+    <input type="text" name="provinsi" placeholder="Provinsi" required>
+    <input type="text" name="kota" placeholder="Kabupaten/Kota" required>
+    <input type="text" name="kecamatan" placeholder="Kecamatan" required>
+    <input type="text" name="kelurahan" placeholder="Kelurahan" required>
+    <input type="text" name="rt" placeholder="RT" required>
+    <input type="text" name="rw" placeholder="RW" required>
+    <button type="submit">Ajukan</button>
+  </form>
+
+  <p id="status-pesan"></p>
+
+  <script>
+    const form = document.getElementById('form-rt');
+    const statusPesan = document.getElementById('status-pesan');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const data = new URLSearchParams(formData);
+
+      const response = await fetch('http://localhost/keluhan-masyarakat/routes/rt_register.php', {
+        method: 'POST',
+        body: data
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        statusPesan.innerHTML = `<span class="success">${result.message}</span>`;
+        form.reset();
+      } else {
+        statusPesan.innerHTML = `<span class="error">${result.message}</span>`;
+      }
+    });
+  </script>
+
+</body>
+</html>

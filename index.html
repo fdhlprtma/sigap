@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Daftar Keluhan</title>
+  <style>
+    img { max-width: 200px; border-radius: 8px; }
+    .card { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Daftar Keluhan</h1>
+  <div id="daftar-keluhan">Memuat keluhan...</div>
+
+  <script>
+    async function loadKeluhan() {
+      const res = await fetch("http://localhost/keluhan-masyarakat/routes/keluhan_list.php");
+      const data = await res.json();
+      const container = document.getElementById("daftar-keluhan");
+      container.innerHTML = "";
+
+      data.forEach(k => {
+        const div = document.createElement("div");
+        div.classList.add("card");
+        div.innerHTML = `
+          <img src="http://localhost/keluhan-masyarakat/uploads/${k.gambar}" alt="gambar keluhan"><br>
+          <strong>${k.provinsi}, ${k.kota}, ${k.kecamatan}</strong><br>
+          <p>${k.deskripsi}</p>
+          <small>🕒 ${k.created_at} | ❤️ ${k.likes} | oleh ${k.pengirim}</small><br>
+          <a href="detail.html?id=${k.id}">Lihat & Komentari</a>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    loadKeluhan();
+  </script>
+</body>
+</html>

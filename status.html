@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Daftar Keluhan - RT</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .terselesaikan {
+      background-color: #d4edda;
+    }
+    .belum-terselesaikan {
+      background-color: #f8d7da;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Daftar Keluhan Warga</h1>
+  <div id="list-keluhan">Memuat...</div>
+
+  <script>
+    async function loadKeluhan() {
+      const res = await fetch("http://localhost/keluhan-masyarakat/routes/keluhan_list.php");
+      const data = await res.json();
+
+      const container = document.getElementById("list-keluhan");
+      container.innerHTML = "";
+
+      data.forEach(k => {
+        const isSelesai = k.status === 'terselesaikan';
+        const statusClass = isSelesai ? 'terselesaikan' : 'belum-terselesaikan';
+        const statusText = isSelesai ? 'Terselesaikan' : 'Belum Terselesaikan';
+        const tombolText = isSelesai ? 'Tandai sebagai Belum Terselesaikan' : 'Tandai sebagai Terselesaikan';
+        const statusNext = isSelesai ? 'belum terselesaikan' : 'terselesaikan';
+
+        const div = document.createElement("div");
+        div.className = `card ${statusClass}`;
+        div.innerHTML = `
+          <h3>${k.judul}</h3>
+          <p>${k.deskripsi}</p>
+          <p><strong>Status:</strong> ${statusText}</p>
+          <button onclick="ubahStatus(${k.id}, '${statusNext}')">
+            ${tombolText}
+          </button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function ubahStatus(id, status) {
+      const konfirmasi = confirm(`Yakin ingin menandai keluhan ini sebagai "${status}"?`);
+      if (!konfirmasi) return;
+
+      const res = await fetch("http://localhost/keluhan-masyarakat/routes/keluhan_status.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ keluhan_id: id, status })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert("Status berhasil diperbarui.");
+        loadKeluhan();
+      } else {
+        alert("Gagal memperbarui status: " + data.message);
+      }
+    }
+
+    loadKeluhan();
+  </script>
+
+</body>
+</html>

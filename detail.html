@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Detail Keluhan</title>
+  <style>
+    img {
+      max-width: 300px;
+      border-radius: 8px;
+    }
+
+    textarea {
+      width: 100%;
+    }
+
+    button.like-btn {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button.like-btn:hover {
+      background-color: #c0392b;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Detail Keluhan</h1>
+  <div id="detail-keluhan">Memuat...</div>
+
+  <h2>Komentar</h2>
+  <form id="form-komentar">
+    <textarea id="input-komentar" required placeholder="Tulis komentar..."></textarea><br>
+    <button type="submit">Kirim</button>
+  </form>
+  <div id="daftar-komentar">Memuat komentar...</div>
+
+  <script>
+    const keluhanId = new URLSearchParams(window.location.search).get('id');
+
+    async function loadDetail() {
+      const res = await fetch("http://localhost/keluhan-masyarakat/routes/keluhan_list.php");
+      const data = await res.json();
+      const keluhan = data.find(k => k.id == keluhanId);
+
+      const div = document.getElementById("detail-keluhan");
+      if (keluhan) {
+        div.innerHTML = `
+          <img src="http://localhost/keluhan-masyarakat/uploads/${keluhan.gambar}" alt=""><br>
+          <h3>${keluhan.provinsi}, ${keluhan.kota}, ${keluhan.kecamatan}</h3>
+          <p>${keluhan.deskripsi}</p>
+          <small>🕒 ${keluhan.created_at} | ❤️ <span id="like-count">${keluhan.likes}</span> | oleh ${keluhan.pengirim}</small><br><br>
+          <button class="like-btn" onclick="likeKeluhan(${keluhan.id})">❤️ Like</button>
+        `;
+      } else {
+        div.innerHTML = "<p>Keluhan tidak ditemukan.</p>";
+      }
+    }
+
+    async function likeKeluhan(id) {
+      try {
+        const res = await fetch("http://localhost/keluhan-masyarakat/routes/like.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            id: id
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          alert("Berhasil like!");
+          await loadDetail();
+        } else {
+          alert(data.message || "Gagal menyukai keluhan.");
+        }
+      } catch (err) {
+        alert("Terjadi kesalahan: " + err.message);
+      }
+    }
+
+
+    async function loadKomentar() {
+      const res = await fetch(`http://localhost/keluhan-masyarakat/routes/komentar_get.php?keluhan_id=${keluhanId}`);
+      const data = await res.json();
+
+      const container = document.getElementById("daftar-komentar");
+      container.innerHTML = "";
+
+      data.forEach(k => {
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <p><strong>${k.nama}</strong>: ${k.isi}</p>
+          <small>🕒 ${k.created_at}</small><hr>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById("form-komentar").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const isi = document.getElementById("input-komentar").value;
+
+      const res = await fetch("http://localhost/keluhan-masyarakat/routes/komentar_tambah.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `keluhan_id=${keluhanId}&isi=${encodeURIComponent(isi)}`
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Komentar berhasil dikirim!");
+        document.getElementById("input-komentar").value = "";
+        loadKomentar();
+      } else {
+        alert(data.error || "Gagal mengirim komentar.");
+      }
+    });
+
+    loadDetail();
+    loadKomentar();
+  </script>
+</body>
+
+</html>
